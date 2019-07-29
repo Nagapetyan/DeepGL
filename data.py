@@ -33,7 +33,7 @@ class LJDataset(Dataset):
 
         clear_spec = np.load(os.path.join(self.clear_data, self.names[idx]))
         noise_spec = np.load(os.path.join(self.noise_data, self.names[idx]))
-        return clear_spec, noise_spec
+        return torch.tensor(clear_spec), torch.tensor(noise_spec)
 
 
 def _pad_2d(x, max_len, b_pad=0):
@@ -52,19 +52,22 @@ def collate_fn(batch):
     :return: Tuple of batches (B,C,T)
     """
     new_batch = []
-    max_len = max(len(x) for x in batch)
+    max_len = max(len(x[0]) for x in batch)
     for (x, y) in batch:
-        s = np.random.randint(0, x.size(1) - hparams.max_time_frames)
-        x[:] = x[s:s + hparams.max_time_frames]
-        y[:] = y[s:s + hparams.max_time_frames]
-        new_batch.append((_pad_2d(x, max_len), _pad_2d(y, max_len)))
+        s = np.random.randint(0, len(x) - hparams.max_time_frames)
+        x = x[:, s:s + hparams.max_time_frames]
+        y = y[:, s:s + hparams.max_time_frames]
+        #new_batch.append((_pad_2d(x, max_len), _pad_2d(y, max_len)))
+        new_batch.append((x, y))
 
-    return torch.tensor(new_batch)
+    return torch.stack([x for x, _ in new_batch], dim=0), torch.stack([y for _, y in new_batch], dim=0)
 
 
 if __name__ == '__main__':
 
     dataset = LJDataset('./datasets/ljspeech')
-    data_loader = DataLoader(dataset=dataset, batch_size=1)
+    data_loader = DataLoader(dataset=dataset, batch_size=5, collate_fn=collate_fn)
     next_batch = next(iter(data_loader))
-    print(next_batch.size())
+    print(len(next_batch))
+    print(next_batch[0].size())
+    print(next_batch[1].size())
