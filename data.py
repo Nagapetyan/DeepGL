@@ -52,22 +52,27 @@ def collate_fn(batch):
     :return: Tuple of batches (B,C,T)
     """
     new_batch = []
-    max_len = max(len(x[0]) for x in batch)
     for (x, y) in batch:
-        s = np.random.randint(0, len(x) - hparams.max_time_frames)
+        s = np.random.randint(0, len(x[1]) - hparams.max_time_frames)
         x = x[:, s:s + hparams.max_time_frames]
         y = y[:, s:s + hparams.max_time_frames]
         #new_batch.append((_pad_2d(x, max_len), _pad_2d(y, max_len)))
         new_batch.append((x, y))
 
-    return torch.stack([x for x, _ in new_batch], dim=0), torch.stack([y for _, y in new_batch], dim=0)
+    return torch.stack([x.permute(2, 0, 1) for x, _ in new_batch], dim=0), \
+           torch.stack([y.permute(2, 0, 1) for _, y in new_batch], dim=0)
 
 
 if __name__ == '__main__':
 
-    dataset = LJDataset('./datasets/ljspeech')
-    data_loader = DataLoader(dataset=dataset, batch_size=5, collate_fn=collate_fn)
+    dataset = LJDataset('/workspace/raid/data/anagapetyan/DeepGL/data/stc_linear')
+    data_loader = DataLoader(dataset=dataset, batch_size=10, collate_fn=collate_fn)
     next_batch = next(iter(data_loader))
     print(len(next_batch))
     print(next_batch[0].size())
     print(next_batch[1].size())
+    
+    from tqdm import tqdm
+    for batch in tqdm(data_loader):
+        pass
+

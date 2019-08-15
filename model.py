@@ -6,7 +6,7 @@ from copy import deepcopy
 Conv = nn.Conv2d
 
 import argparse
-parser = argparse.ArgumentParser(argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser()
 parser.add_argument('--torchaudio_path', type=str, default='torchaudio')
 args = parser.parse_args()
 
@@ -32,7 +32,7 @@ class DeepGL(nn.Module):
         amplitude = deepcopy(x)
         z = None
         for i in range(self.num_blocks):
-            z, x[:] = self.block(x, amplitude)
+            z, x = self.block(x, amplitude)
 
         return z, x
 
@@ -82,11 +82,24 @@ class DeGLI_block(nn.Module):
 
 
 if __name__ == '__main__':
-    device = torch.cuda()
+    #device = torch.cuda()
     model = DeepGL(3)
-    model.to(device)
+    model.cuda()
 
-    a = torch.rand(4, 2, 513, 1030).to(device)
+    a = torch.rand(4, 2, 513, 1030).cuda()	
 
     z, out = model(a)
+    print(z.shape)
 
+    from data import LJDataset, collate_fn
+    from torch.utils.data import DataLoader
+
+    dataset = LJDataset('/workspace/raid/data/anagapetyan/DeepGL/data/ljspeech', train=True)
+    loader = DataLoader(dataset, batch_size=5, collate_fn=collate_fn, pin_memory=True)
+
+    x,y = next(iter(loader))
+    x,y = x.cuda(), y.cuda()
+
+    print('input data size', x.size(), y.size())
+
+    model(y)

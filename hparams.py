@@ -2,7 +2,7 @@
 Hyperparameters for audio and spectogram preprocessing
 """
 
-sample_rate = 2205
+sample_rate = 16000
 fmin = 125
 fmax = 7600
 fft_size = 1024

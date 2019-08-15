@@ -14,8 +14,8 @@ import hparams
 
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('--data_path', type=str, default='../../dataset/LJSpeech-1.1/wavs', help='Dateset path')
-parser.add_argument('--prep_path', type=str, default='./datasets/ljspeech', help='Path to save linear spectrogram')
+parser.add_argument('--data_path', type=str, default='/workspace/raid/data/anagapetyan/DeepGL/data/STC/Train/train/auto', help='Dateset path')
+parser.add_argument('--prep_path', type=str, default='/workspace/raid/data/anagapetyan/DeepGL/data/stc_linear', help='Path to save linear spectrogram')
 
 
 def complex2real(x):
@@ -61,7 +61,7 @@ def preprocess(args):
     clear_spec = os.path.join(args.prep_path, 'clear')
     noise_spec = os.path.join(args.prep_path, 'noise')
     for file in tqdm(os.listdir(args.data_path)):
-        if not file.endswith('txt'):
+        if file.endswith('wav'):
             sr, audio = wavfile.read(os.path.join(args.data_path, file))
 
             snr = np.random.rand(1) * (hparams.snr_min - hparams.snr_max)
@@ -72,6 +72,9 @@ def preprocess(args):
 
             spec = librosa.core.stft(np.float32(audio), hop_length=hparams.hop_size, n_fft=hparams.fft_size,
                                      win_length=hparams.win_length)
+
+            if spec.shape[1] <= hparams.max_time_frames:
+                continue
             #fr, times, spec = signal.spectrogram(audio, fs=sr)
 
             #min_level = np.exp(hparams.min_level_db / 20 * np.log(10))

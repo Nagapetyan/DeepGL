@@ -8,6 +8,14 @@ from logger import Logger
 import os
 
 
+def save_parameters(args, run_name):
+    with open(os.path.join(args.log_path, run_name)+'/parameters.txt', 'w') as f:
+        f.write('num_blocks {}, lr {}, beta1 {} beta2 {}, batch_size {} gamma  {} scheduler_step {}'.format(
+            args.num_blocks, args.lr, args.beta1, args.beta2, args.batch_size, 
+            args.gamma, args.scheduler_step
+        ))
+
+
 def prepare_directories(args, run_name):
     if not os.path.isdir(args.data_path):
         raise Exception("Invalid data path. No such directory")
@@ -29,7 +37,7 @@ def prepare_directories(args, run_name):
 
 
 def build_model(args):
-    model = DeepGL(args.num_blocks, args.n_fft)
+    model = DeepGL(args.num_blocks)
     if args.pretrained_path:
         model.load_state_dict(torch.load(
             os.path.join(args.pretrained_path, 'samples') + '/' + str(args.load_step) + '.pt'))
